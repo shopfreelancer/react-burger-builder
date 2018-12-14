@@ -1,3 +1,6 @@
+# Build a Burger with React
+A small demo app written with the purpose that I get into the core concepts of React. 
+
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
 ## Available Scripts
