@@ -31,8 +31,13 @@ class BurgerBuilder extends Component {
         this.setState({ totalPrice: newPrice });
     }
 
+    // needs to be arrow function as it is passed as a prop
     updatePurchasing = () => {
         this.setState({purchasing: true});
+    }
+
+    purchasedCancelHandler = () => {
+        this.setState({purchasing: false});
     }
 
     updatePurchaseState(ingredients) {
@@ -97,7 +102,7 @@ class BurgerBuilder extends Component {
 
         return (
             <Aux>
-                <Modal show={this.state.purchasing}>
+                <Modal show={this.state.purchasing} modalClose={this.purchasedCancelHandler}>
                     <OrderSummary ingredients={ this.state.ingredients }/>
                 </Modal>
                 <Burger ingredients={ this.state.ingredients }/>
