@@ -4,7 +4,7 @@ import Burger from '../../components/Burger/Burger';
 import BuildControls from '../../components/Burger/BuildControls/BuildControls';
 
 const INGREDIENT_PRICES = {
-    salad: 0.5,
+    salad: 0.6,
     meat: 3,
     bacon: 0.7,
     cheese: 0.5
@@ -16,14 +16,28 @@ class BurgerBuilder extends Component {
         ingredients: {
             salad: 1,
             bacon: 1,
-            cheese: 2,
-            meat: 2
+            cheese: 1,
+            meat: 1
         },
-        totalPrice: 4
+        totalPrice: 0
     };
+
+    componentDidMount() {
+        const newPrice = this.calculateInitialPrice();
+        this.setState({totalPrice: newPrice});
+    }
+
+    calculateInitialPrice(){
+        let price = 0;
+        Object.keys(this.state.ingredients).forEach(i=>{
+            price += INGREDIENT_PRICES[i];
+        });
+        return price;
+    }
 
     addIngredient = (type) => {
 
+        // update state in immutable way
         const oldCount = this.state.ingredients[type];
         const updatedIngredients = {
             ...this.state.ingredients
@@ -37,13 +51,14 @@ class BurgerBuilder extends Component {
     removeIngredient = (type) => {
 
         const oldCount = this.state.ingredients[type];
+        const oldPrice = this.state.totalPrice;
         const updatedIngredients = {
             ...this.state.ingredients
         };
 
-        if(oldCount > 0) {
+        if(oldCount >= 1) {
             updatedIngredients[type] = oldCount - 1;
-            const newPrice = INGREDIENT_PRICES[type] - this.state.totalPrice;
+            const newPrice = oldPrice - INGREDIENT_PRICES[type];
             this.setState({ingredients:updatedIngredients, totalPrice: newPrice});
         }
 
@@ -63,6 +78,7 @@ class BurgerBuilder extends Component {
             <Aux>
                 <Burger ingredients={this.state.ingredients}/>
                 <BuildControls
+                    totalPrice={this.state.totalPrice}
                     disabled={disabledInfo}
                     addIngredientHandler={this.addIngredient}
                     removeIngredientHandler={this.removeIngredient}
