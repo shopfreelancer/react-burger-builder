@@ -18,21 +18,23 @@ const INGREDIENT_PRICES = {
 class BurgerBuilder extends Component {
 
     state = {
-        ingredients: {
-            salad: 1,
-            bacon: 1,
-            cheese: 1,
-            meat: 1
-        },
+        ingredients: null,
         totalPrice: 0,
         purchasable: true,
         purchasing: false,
         loading: false,
+        error: false
     };
 
     componentDidMount() {
-        const newPrice = this.calculateInitialPrice();
-        this.setState({ totalPrice: newPrice });
+        axios.get('/ingredients.json')
+            .then(response => {
+                this.setState({ ingredients: response.data });
+                const newPrice = this.calculateInitialPrice();
+                this.setState({ totalPrice: newPrice });
+            })
+            .catch(err => this.setState({ error: true }));
+
     }
 
     // needs to be arrow function as it is passed as a prop
@@ -59,13 +61,20 @@ class BurgerBuilder extends Component {
                 }
             }
         };
-        axios.post('/orders.json',  order)
+        axios.post('/orders.json', order)
             .then(response => {
-                this.setState({loading: false, purchasing: false});
+                this.setState({ loading: false, purchasing: false });
             })
             .catch(error => {
-                this.setState({loading: false, purchasing: false });
+                this.setState({ loading: false, purchasing: false });
             });
+
+        const queryParams = [];
+        for (let i in this.state.ingredients) {
+            queryParams.push(encodeURIComponent(i) + '=' + encodeURIComponent(this.state.ingredients[i]));
+        }
+        const queryString = queryParams.join('&');
+        this.props.history.push({ pathname: '/checkout', search: '?' + queryString });
     }
 
     updatePurchaseState(ingredients) {
@@ -81,6 +90,7 @@ class BurgerBuilder extends Component {
     }
 
     calculateInitialPrice() {
+        if (this.state.ingredients == null) return;
         let price = 0;
         Object.keys(this.state.ingredients).forEach(i => {
             price += this.state.ingredients[i] * INGREDIENT_PRICES[i];
@@ -118,7 +128,6 @@ class BurgerBuilder extends Component {
         }
     };
 
-
     render() {
         const disabledInfo = {
             ...this.state.ingredients
@@ -128,14 +137,35 @@ class BurgerBuilder extends Component {
             disabledInfo[key] = disabledInfo[key] <= 0;
         }
 
-        let orderSummary = <OrderSummary
-            ingredients={ this.state.ingredients }
-            purchaseCancelled={ this.purchaseCancelHandler }
-            purchaseContinue={ this.purchaseContinueHandler }
-            totalPrice={ this.state.totalPrice.toFixed(2) }
-        />;
+        let orderSummary = null;
+
+        if (this.state.ingredients) {
+            orderSummary = <OrderSummary
+                ingredients={ this.state.ingredients }
+                purchaseCancelled={ this.purchaseCancelHandler }
+                purchaseContinue={ this.purchaseContinueHandler }
+                totalPrice={ this.state.totalPrice.toFixed(2) }
+            />;
+        }
+
         if (this.state.loading) {
             orderSummary = <Spinner/>;
+        }
+
+        let burger = this.state.error ? <p>Error loading ingredients.</p> : <Spinner/>;
+        if (this.state.ingredients) {
+            burger = (
+                <Aux>
+                    <Burger ingredients={ this.state.ingredients }/>
+                    <BuildControls
+                        ordered={ this.updatePurchasing }
+                        totalPrice={ this.state.totalPrice }
+                        disabled={ disabledInfo }
+                        addIngredientHandler={ this.addIngredient }
+                        removeIngredientHandler={ this.removeIngredient }
+                        purchasable={ !this.state.purchasable }
+                    />
+                </Aux>);
         }
 
         return (
@@ -143,15 +173,8 @@ class BurgerBuilder extends Component {
                 <Modal show={ this.state.purchasing } modalClose={ this.purchasedCancelHandler }>
                     { orderSummary }
                 </Modal>
-                <Burger ingredients={ this.state.ingredients }/>
-                <BuildControls
-                    ordered={ this.updatePurchasing }
-                    totalPrice={ this.state.totalPrice }
-                    disabled={ disabledInfo }
-                    addIngredientHandler={ this.addIngredient }
-                    removeIngredientHandler={ this.removeIngredient }
-                    purchasable={ !this.state.purchasable }
-                />
+                { burger }
+
             </Aux>
         )
     }

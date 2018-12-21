@@ -2,6 +2,11 @@ import React, { Component } from 'react';
 import Modal from '../../components/UI/Modal/Modal';
 import Aux from '../Aux/Aux';
 
+/**
+ * This is a factory returning new instances of the class every time it is wrapped around an element
+ * @param WrappedComponent
+ * @param axios
+ */
 const withErrorHandler = (WrappedComponent, axios) => {
     return class extends Component {
 
@@ -9,18 +14,23 @@ const withErrorHandler = (WrappedComponent, axios) => {
             error: null
         }
 
-        componentDidMount() {
-            axios.interceptors.request.use(req => {
+        componentWillMount() {
+            this.requestInterceptor = axios.interceptors.request.use(req => {
                 this.setState({ error: null });
                 return req;
             });
-            axios.interceptors.response.use(res => res, error => {
+            this.responseInterceptor = axios.interceptors.response.use(res => res, error => {
                 this.setState({ error: error });
             });
         }
 
         errorConfirmedHandler = () => {
             this.setState({ error: null });
+        };
+
+        componentWillUnmount(){
+            axios.interceptors.request.eject(this.requestInterceptor);
+            axios.interceptors.response.eject(this.responseInterceptor);
         }
 
         render() {
