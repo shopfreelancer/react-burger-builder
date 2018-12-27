@@ -27,6 +27,7 @@ class BurgerBuilder extends Component {
     };
 
     componentDidMount() {
+        /*
         axios.get('/ingredients.json')
             .then(response => {
                 this.setState({ ingredients: response.data });
@@ -34,6 +35,7 @@ class BurgerBuilder extends Component {
                 this.setState({ totalPrice: newPrice });
             })
             .catch(err => this.setState({ error: true }));
+            */
 
     }
 
