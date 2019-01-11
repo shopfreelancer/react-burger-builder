@@ -13,6 +13,15 @@ const INGREDIENT_PRICES = {
     cheese: 0.5
 };
 
+const calculateBurgerPrice = (ingredients) => {
+    let price = 0;
+    if (ingredients == null) return 0;
+    Object.keys(ingredients).forEach(i => {
+        price += ingredients[i] * INGREDIENT_PRICES[i];
+    });
+    return price;
+}
+
 const burger = (state = initialState, action) => {
     switch(action.type){
         case(actionTypes.ADD_INGREDIENT):
@@ -42,6 +51,7 @@ const burger = (state = initialState, action) => {
                     cheese: action.ingredients.cheese,
                     meat: action.ingredients.meat,
                 },
+                totalPrice: calculateBurgerPrice(action.ingredients),
                 error: false
             };
         case(actionTypes.FETCH_INGREDIENTS_FAILED):
